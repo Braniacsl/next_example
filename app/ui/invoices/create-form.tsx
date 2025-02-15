@@ -1,3 +1,5 @@
+'use client';
+
 import { CustomerField } from '@/app/lib/definitions';
 import Link from 'next/link';
 import {
@@ -7,10 +9,31 @@ import {
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '@/app/ui/button';
+import { createInvoice } from '@/app/lib/action';
+import { useState, useEffect } from "react";
+import IncorrectInput  from '@/app/ui/invoices/incorrect';
+import { initCustomTraceSubscriber } from 'next/dist/build/swc/generated-native';
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
+  const [ status, setStatus ] = useState<string | null>("start");
+  const [ customerId, setCustomerId] = useState<string | null>("start");
+  const [ amount, setAmount ] = useState<string | null>("start");
+
+  const handleSubmit = async (formData : FormData) => {
+    let curCustomerId = formData.get('customerId')?.toString() || null;
+    let curAmount = formData.get('amount')?.toString() || null;
+    let curStatus = formData.get('status')?.toString() || null;
+    
+    setCustomerId(curCustomerId);
+    setAmount(curAmount);
+    setStatus(curStatus);
+
+    if(curCustomerId && curAmount && curStatus)
+      createInvoice(formData);
+  };
+
   return (
-    <form>
+    <form action={ handleSubmit }>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Customer Name */}
         <div className="mb-4">
@@ -99,6 +122,7 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
         </fieldset>
       </div>
       <div className="mt-6 flex justify-end gap-4">
+        <IncorrectInput customerId = {customerId} amount = { amount } status = { status }/>
         <Link
           href="/dashboard/invoices"
           className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
